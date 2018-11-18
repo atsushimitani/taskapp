@@ -10,9 +10,11 @@ import UIKit
 import RealmSwift
 import UserNotifications
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
 
     @IBOutlet weak var tableView: UITableView!
+    
+    @IBOutlet weak var searchTextField: UITextField!
     
     // Realmインスタンス
     let realm = try! Realm()
@@ -21,10 +23,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         
         tableView.delegate = self
         tableView.dataSource = self
+        searchTextField.delegate = self
     }
 
     override func didReceiveMemoryWarning() {
@@ -82,7 +84,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 tableView.deleteRows(at: [indexPath], with: .fade)
             }
             
-            // 未通知のローカル通知一覧をログ出力ss
+            // 未通知のローカル通知一覧をログ出力
             center.getPendingNotificationRequests { (requests: [UNNotificationRequest]) in
                 for request in requests {
                     print("/---------------")
@@ -91,6 +93,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 }
             }
         }
+    }
+    
+    // 検索
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField.text == "" {
+            taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: false)
+        } else {
+            taskArray = try! Realm().objects(Task.self).filter(NSPredicate(format: "category = %@", textField.text!)).sorted(byKeyPath: "date", ascending: false)
+        }
+        tableView.reloadData()
+        return true;
     }
     
     // segue で画面遷移する際に呼ばれる
